@@ -95,7 +95,7 @@ procedure insertUserNode ( var _tree, _userNode: userTree );
 		if ( _tree = nil ) then
 			_tree := _userNode
 		else
-			if ( _tree^.nick <= _tree^.nick ) then
+			if ( _tree^.nick <= _userNode^.nick ) then
 				insertUserNode ( _tree^.big, _userNode )
 			else
 				insertUserNode ( _tree^.low, _userNode );
@@ -128,7 +128,10 @@ procedure loadUsers ( var users: userTree );
 		users := nil;
 		openUsersFile ( usersStored, USERSFILE_, error );
 		if not ( error ) then
-			createTreeFromFile ( users, usersStored );
+			begin
+				createTreeFromFile ( users, usersStored );
+				close ( usersStored );
+			end;
 	end;
 
 function userExists ( users: userTree; nick: String ): userTree;
@@ -314,14 +317,84 @@ procedure loadConversations ( var conversations: conversationsList; fileName: St
 			createConversationListFromFile ( conversations, conversationsStored );
 	end;
 
+
+{**
+ * ETAPA DE GUARDADO
+ *}
+
+procedure saveUserInformationFromTree ( var usersStore: usersFile; var node: userTree );
+	var	newUser
+				:userFields
+		;
+	begin
+		with newUser do
+			begin
+				nick := node^.nick;
+				password := node^.password;
+			end;
+		write ( usersStore, newUser );
+	end;
+
+procedure getUsersNode ( users: userTree; var usersStore: usersFile );
+	begin
+		if ( users <> nil ) then
+			begin
+				getUsersNode ( users^.low, usersStore );
+				saveUserInformationFromTree ( usersStore, users );
+				getUsersNode ( users^.big, usersStore ); 
+			end;
+	end;
+
+procedure saveUser ( users: userTree );
+	var usersStore 
+				:usersFile
+		;	error
+				:Boolean
+		;
+	begin
+		openUsersFile ( usersStore, USERSFILE_, error );
+		if ( error ) then
+			writeln('No se pudo guardar')
+		else
+			begin
+				writeln('Se ha guardado el usuario');
+				rewrite ( usersStore );
+				getUsersNode ( users, usersStore );
+			end;
+	end;
+
 {**
  * ETAPA DE MENUES
  *}
 
-procedure afterLog ( currentUser: userTree );
-begin
-	
-end;
+procedure imprimirArbolAscendente ( arbol: userTree );
+	begin
+		if ( arbol <> nil ) then
+			begin
+				imprimirArbolAscendente ( arbol^.low );
+				writeln ( arbol^.nick );
+				imprimirArbolAscendente ( arbol^.big );
+			end;
+	end;
+
+procedure logout ( var users: userTree );
+	begin
+		writeln('Guardando usuario');
+		saveUser ( users );	
+		imprimirArbolAscendente ( users );	
+	end;
+
+procedure afterLog ( var users, currentUser: userTree );
+	var option
+				:Integer
+		;
+	begin
+		writeln('Presiona 1 para cerrar sesion');
+		readln ( option );
+		if ( option = 1 ) then
+			logout ( users );
+
+	end;
 
 function passwordAccepted ( user: userTree; password: String ): Boolean;
 	begin	
@@ -341,8 +414,8 @@ procedure login;
 	begin
 		
 		writeln('Ingrese su nombre de usuario');
-		readln ( nick );
 		loadUsers ( users );
+		readln ( nick );
 		if ( users <> nil ) then
 			begin
 				currentUser := userExists ( users, nick );
@@ -351,12 +424,18 @@ procedure login;
 						writeln ('Ingrese su contraseña');
 						readln ( password );
 						if ( passwordAccepted ( currentUser, password ) ) then
-							afterLog ( currentUser )
+							afterLog ( users, currentUser )
 						else
-							login ();
+							begin
+								writeln( 'La contraseña no es correcta' );
+								login ();
+							end
 					end
 				else
-					login ()
+					begin
+						writeln( 'El usuario no existe' );
+						login ()
+					end
 			end
 		else
 			writeln('No existen usuarios aun');
@@ -406,7 +485,7 @@ procedure register;
 				if ( createUserNode ( newUser, temporalUser ) ) then
 					begin
 						insertUserNode ( users, newUser );
-						afterLog( newUser );
+						afterLog ( users, newUser );
 					end
 				else
 					begin
