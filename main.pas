@@ -1,22 +1,21 @@
 program test;
 
 uses 
-		conversations
-	,	messages
-	,	users
-	,	screens
-	;			
-
+    conversations
+  , messages
+  , users
+  , screens
+  ;			
 
 var conversation
-			:conversationsList
-	;	user
-			:userTree
-	;
+      :conversationsList
+  ; user
+      :userTree
+  ;
 
 begin
-	loadUsers ( user );
-	loadConversations ( conversation, user );
-	writeln(':: Bienvenido a Guatsap ::');
-	beforeLog ( user, conversation );
+  loadUsers ( user );
+  loadConversations ( conversation, user );
+  writeln(':: Bienvenido a Guatsap ::');
+  beforeLog ( user, conversation );
 end.
