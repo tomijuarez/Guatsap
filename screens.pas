@@ -9,7 +9,7 @@ interface
 		 
 	procedure beforeLog ( var users: userTree; var conversations: conversationsList );	
 	procedure afterLog  ( var users, currentUser: userTree; var conversations: conversationsList );
-
+	
 implementation
 	
   procedure logout ( var users: userTree; conversations: conversationsList );
