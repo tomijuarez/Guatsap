@@ -6,7 +6,7 @@ interface
 		 , users
 		 , conversations
 		 ;
-
+		 
 	procedure beforeLog ( var users: userTree; var conversations: conversationsList );	
 	procedure afterLog  ( var users, currentUser: userTree; var conversations: conversationsList );
 
