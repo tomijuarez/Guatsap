@@ -361,5 +361,4 @@ procedure particularConversation ( code, quantity: Integer; conversations: conve
 					  deleteConversationsData ( conversations^.next, currentUser );
 				end;
 		end;
-
 end.
